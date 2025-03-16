@@ -4,7 +4,10 @@
 
 if(BUILD_SOKOL)
 
-add_subdirectory(${THIRDPARTY_DIR}/glfw)
+if(NOT EMSCRIPTEN)
+    set(GLFW_BUILD_WAYLAND OFF)
+    add_subdirectory(${THIRDPARTY_DIR}/glfw)
+endif()
 
 set(SOKOL_LIB_SRC ${CMAKE_SOURCE_DIR}/src/system/sokol/sokol.c)
 
@@ -31,10 +34,11 @@ if(APPLE)
         "-framework MetalKit"
         "-framework AudioToolbox"
         "-framework GameController"
+        glfw
     )
 
 elseif(LINUX)
-    target_link_libraries(sokol PRIVATE X11 GL Xi Xcursor m dl asound)
+    target_link_libraries(sokol PRIVATE X11 GL Xi Xcursor m dl asound glfw)
 elseif(WIN32)
     target_link_libraries(sokol PRIVATE D3D11 glfw)
 endif()
