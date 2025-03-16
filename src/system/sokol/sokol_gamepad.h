@@ -78,6 +78,8 @@ extern "C" {
 
     SOKOL_API_DECL void sgamepad_init();
 
+    SOKOL_API_DECL void sgamepad_shutdown();
+
     SOKOL_API_DECL void sgamepad_record_state();
 
     SOKOL_API_DECL void sgamepad_get_gamepad_state(unsigned int index, sgamepad_gamepad_state* pstate);
@@ -186,14 +188,13 @@ _SOKOL_PRIVATE void _sgamepad_generate_analog_stick_state(float x_value, float y
 /*== PLATFORM SPECIFIC INCLUDES AND DEFINES ==================================*/
 #if defined (_SAPP_WIN32) || defined(_SAPP_APPLE) || defined(_SAPP_LINUX)
     #include <GLFW/glfw3.h>
+    #define SGAMEPAD_MAX_SUPPORTED_GAMEPADS 4
 #else
     #define SGAMEPAD_MAX_SUPPORTED_GAMEPADS 0
 #endif
 
-#define SGAMEPAD_MAX_SUPPORTED_GAMEPADS 4
-
 typedef struct sgamepad {
-    sgamepad_gamepad_state gamepad_states[SGAMEPAD_MAX_SUPPORTED_GAMEPADS];
+    sgamepad_gamepad_state gamepad_states[4];
 } sgamepad;
 
 _SOKOL_PRIVATE sgamepad _sgamepad = {0};
@@ -251,12 +252,64 @@ SOKOL_API_IMPL unsigned int sgamepad_get_max_supported_gamepads() {
     return SGAMEPAD_MAX_SUPPORTED_GAMEPADS;
 }
 
+#if defined (_SAPP_WIN32) || defined(_SAPP_LINUX)
+
+SOKOL_API_IMPL void sgamepad_init() {
+    glfwInit();
+}
+
+SOKOL_API_IMPL void sgamepad_shutdown() {
+
+    glfwTerminate();
+}
+
+#elif defined(_SAPP_APPLE)
+
+static void* _glfw_calloc(size_t count, size_t size)
+{
+    return calloc(count, size);
+}
+
+static void* _glfw_realloc(void* block, size_t size)
+{
+    return realloc(block, size);
+}
+
+static void _glfw_free(void* block)
+{
+    free(block);
+}
+
+#define _GLFW_COCOA
+#include "cocoa_joystick.m"
+#include "cocoa_time.c"
+#include "input.c"
+
+_GLFWlibrary _glfw = { GLFW_TRUE };
+
+void _glfwInputError(int code, const char* format, ...)
+{}
+
 SOKOL_API_IMPL void sgamepad_init() {
 
-#if defined (_SAPP_WIN32) || defined(_SAPP_APPLE) || defined(_SAPP_LINUX)
-    glfwInit();
-#endif
+    _glfw.platform = (_GLFWplatform)
+    {
+        .initJoysticks = _glfwInitJoysticksCocoa,
+        .terminateJoysticks = _glfwTerminateJoysticksCocoa,
+        .pollJoystick = _glfwPollJoystickCocoa,
+        .getMappingName = _glfwGetMappingNameCocoa,
+        .updateGamepadGUID = _glfwUpdateGamepadGUIDCocoa,
+    };
+
+    _glfwInitGamepadMappings();
 }
+
+SOKOL_API_IMPL void sgamepad_shutdown() {
+
+    _glfwTerminateJoysticksCocoa();
+}
+
+#endif
 
 SOKOL_API_IMPL void sgamepad_record_state() {
     memset(_sgamepad.gamepad_states, 0, sizeof(_sgamepad.gamepad_states));

@@ -687,6 +687,7 @@ static void cleanup(void *userdata)
 
     free(app);
 
+    sgamepad_shutdown();
     sgl_shutdown();
     sg_shutdown();
     saudio_shutdown();

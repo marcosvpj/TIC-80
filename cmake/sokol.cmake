@@ -29,13 +29,16 @@ if(APPLE)
 
     target_link_libraries(sokol PRIVATE
         "-framework Cocoa"
+        "-framework IOKit"
         "-framework QuartzCore"
         "-framework Metal"
         "-framework MetalKit"
         "-framework AudioToolbox"
-        "-framework GameController"
-        glfw
     )
+
+    target_include_directories(sokol PRIVATE 
+        ${THIRDPARTY_DIR}/glfw/src
+        ${THIRDPARTY_DIR}/glfw/include)
 
 elseif(LINUX)
     target_link_libraries(sokol PRIVATE X11 GL Xi Xcursor m dl asound glfw)
