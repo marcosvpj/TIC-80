@@ -3,6 +3,9 @@
 ################################
 
 if(BUILD_SOKOL)
+
+add_subdirectory(${THIRDPARTY_DIR}/glfw)
+
 set(SOKOL_LIB_SRC ${CMAKE_SOURCE_DIR}/src/system/sokol/sokol.c)
 
 add_library(sokol STATIC ${SOKOL_LIB_SRC})
@@ -21,7 +24,7 @@ if(APPLE)
 
     target_compile_options(sokol PRIVATE -x objective-c)
 
-    target_link_libraries(sokol
+    target_link_libraries(sokol PRIVATE
         "-framework Cocoa"
         "-framework QuartzCore"
         "-framework Metal"
@@ -31,9 +34,9 @@ if(APPLE)
     )
 
 elseif(LINUX)
-    target_link_libraries(sokol X11 GL Xi Xcursor m dl asound)
+    target_link_libraries(sokol PRIVATE X11 GL Xi Xcursor m dl asound)
 elseif(WIN32)
-    target_link_libraries(sokol D3D11)
+    target_link_libraries(sokol PRIVATE D3D11 glfw)
 endif()
 
 target_include_directories(sokol PRIVATE ${THIRDPARTY_DIR}/sokol)
@@ -52,7 +55,7 @@ if(BUILD_PLAYER AND BUILD_SOKOL)
         ${THIRDPARTY_DIR}/sokol
         ${CMAKE_SOURCE_DIR}/src)
 
-    target_link_libraries(player-sokol tic80core sokol)
+    target_link_libraries(player-sokol PRIVATE tic80core sokol)
 endif()
 
 ################################
@@ -97,6 +100,6 @@ if(BUILD_SOKOL)
         ${CMAKE_SOURCE_DIR}/src
         ${THIRDPARTY_DIR}/sokol)
 
-    target_link_libraries(tic80 tic80studio sokol)
+    target_link_libraries(tic80 PRIVATE tic80studio sokol)
 
 endif()

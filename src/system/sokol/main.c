@@ -25,15 +25,12 @@
 #include <string.h>
 #include <time.h>
 #include <limits.h>
+#include <math.h>
 
 #include "sokol.h"
 
 #include "studio/system.h"
 #include "crt.h"
-
-#if defined(__TIC_WINDOWS__)
-#include <windows.h>
-#endif
 
 #define CRT_SCALE 4
 
@@ -249,6 +246,8 @@ static void init(void *userdata)
 
     app->audio.samples = malloc(sizeof app->audio.samples[0] * saudio_sample_rate() / TIC80_FRAMERATE * TIC80_SAMPLE_CHANNELS);
     app->mouse.x = app->mouse.y = TIC80_FULLWIDTH;
+
+    sgamepad_init();
 }
 
 static void handleMouse(App *app)
@@ -337,10 +336,29 @@ static void handleGamepad(App *app)
         sgamepad_gamepad_state state;
         sgamepad_get_gamepad_state(i, &state);
 
-        if(state.left_stick.direction_x)
-        {
-            // !TODO: smth pressed
-        }
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_A) puts("A");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_B) puts("B");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_X) puts("X");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_Y) puts("Y");
+
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_BACK)        puts("BACK");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_START)       puts("START");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_LEFT_THUMB)  puts("LEFT_THUMB");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_RIGHT_THUMB) puts("RIGHT_THUMB");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_DPAD_UP)     puts("DPAD_UP");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_DPAD_RIGHT)  puts("DPAD_RIGHT");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_DPAD_DOWN)   puts("DPAD_DOWN");
+        if(state.digital_inputs & SGAMEPAD_GAMEPAD_DPAD_LEFT)   puts("DPAD_LEFT");
+
+        if(state.left_shoulder > 0)  printf("left_shoulder %f\n", state.left_shoulder);
+        if(state.right_shoulder > 0) printf("right_shoulder %f\n", state.right_shoulder);
+        if(state.left_trigger > 0)   printf("left_trigger %f\n", state.left_trigger);
+        if(state.right_trigger > 0)  printf("right_trigger %f\n", state.right_trigger);
+
+        if(fabs(state.left_stick.normalized_x) > 0.2) printf("left_stick.normalized_x %f\n", state.left_stick.normalized_x);
+        if(fabs(state.left_stick.normalized_y) > 0.2) printf("left_stick.normalized_y %f\n", state.left_stick.normalized_y);
+        if(fabs(state.right_stick.normalized_x) > 0.2) printf("right_stick.normalized_x %f\n", state.right_stick.normalized_x);
+        if(fabs(state.right_stick.normalized_y) > 0.2) printf("right_stick.normalized_y %f\n", state.right_stick.normalized_y);
     }
 }
 
@@ -676,21 +694,12 @@ static void cleanup(void *userdata)
 
 sapp_desc sokol_main(s32 argc, char* argv[])
 {
-#if defined(__TIC_WINDOWS__)
-    {
-        CONSOLE_SCREEN_BUFFER_INFO info;
-        if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info) && !info.dwCursorPosition.X && !info.dwCursorPosition.Y)
-            FreeConsole();
-    }
-#endif
-
     App *app = NEW(App);
     memset(app, 0, sizeof *app);
 
     app->audio.desc.num_channels = TIC80_SAMPLE_CHANNELS;
     saudio_setup(&app->audio.desc);
-    sgamepad_init();
-
+    
     app->studio = studio_create(argc, argv, saudio_sample_rate(), TIC80_PIXEL_COLOR_RGBA8888, "./", INT32_MAX, tic_layout_qwerty, app);
 
     if(studio_config(app->studio)->cli)

@@ -86,3 +86,7 @@
 	path = vendor/sokol-tools-bin
 	url = https://github.com/floooh/sokol-tools-bin.git
 	shallow = true
+[submodule "vendor/glfw"]
+	path = vendor/glfw
+	url = https://github.com/glfw/glfw.git
+	shallow = true
