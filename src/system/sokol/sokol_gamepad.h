@@ -242,6 +242,12 @@ _SOKOL_PRIVATE void _sgamepad_record_state() {
 /*== Fallback dummy Implementation ============================================*/
 #else
 
+SOKOL_API_IMPL void sgamepad_init() {
+}
+
+SOKOL_API_IMPL void sgamepad_shutdown() {
+}
+
 _SOKOL_PRIVATE void _sgamepad_record_state() {
 }
 
